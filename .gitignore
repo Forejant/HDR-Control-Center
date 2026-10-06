@@ -1,0 +1,7 @@
+/HdrControlCenter.exe
+/bin/
+/obj/
+/.vs/
+/work/
+*.log
+*.failed.txt

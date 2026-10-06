@@ -1,0 +1,133 @@
+﻿0.29：编译通过；沿用用户此前要求未运行测试，未切换真实显示或驱动功能，实际速度及兼容性待用户确认。以下为此前版本历史记录。
+
+0.28：沿用用户要求未运行测试，仅编译打包，首次毛玻璃显示效果待桌面确认。以下为历史版本记录。
+
+0.27：沿用用户要求未运行测试，仅编译打包。以下为此前版本历史记录。
+
+0.26：按用户要求未运行测试，仅编译打包。以下为 0.25 历史验证记录。
+
+HDR 控制中心 0.25 验证结果
+2026-10-07
+
+新增行为：实时 SDR 亮度写入与最新请求连续提交；所选显示器身份校验；背景与卡片纯色小幅增强；普通失焦及主动点击外部窗口时收起到托盘。
+
+测试边界：新增 UI/窗口测试使用示例数据，真实窗口焦点及输入观察生命周期；应用期间外部点击用同一生产观察路径定向调用验证。真实 SDR 测试仅将所选 HDR 显示器亮度改变 ±1%，回读确认后恢复精确原始白电平 4000。未切换真实 HDR、杜比视界、RTX 状态，也未修改开机启动、系统透明或字体平滑设置。本机单次 SDR 写入约 3–6 ms，不代表所有驱动速度。
+
+真实桌面示例窗口视觉检查：稍强主题底色下仍透出模糊背景颜色，文字保持实体，排版正常。静态 PNG 不包含实时毛玻璃效果。
+
+原托盘及层级夹具隔离新增自动收起，以验证原有独立逻辑；新 realtime-popup-test 单独验证自动收起、主动外部点击覆盖正在应用、收起后不重开、所属对话框例外和拖动例外。
+
+--- realtime-popup-test ---
+PASS: first drag write immediate, pending latest value drained during drag with timer stopped, 39 intermediate requests coalesced, immutable targets, one concurrent writer, final release verification.
+PASS: a disconnected old display cannot erase the pending update to a newly selected display.
+PASS: external focus dismisses, single tray reopen, owned-dialog exemption, actual hook installed/released, operation focus protection, outside click during operation dismisses without reopen, drag capture, activation race, stronger tint.
+
+
+--- brightness-live-test ---
+Legacy full monitor enumeration mean ms=0.25
+Direct selected-target write requested=61 readback=4050 ms=3.28
+Direct selected-target write requested=59 readback=3950 ms=4.98
+Direct selected-target write requested=60 readback=4000 ms=6.14
+PASS: real selected-monitor writes confirmed; original exact SDR white level restored=4000. HDR/Dolby/RTX states untouched.
+
+
+--- self-test ---
+PASS: native ABI, brightness mapping, Dolby recovery, DPI geometry, custom control painting, keyboard/accessibility input and focus, pending state, NVIDIA saved-state decoding, exact monitor matching, stale UI controls, bounded Settings waits, stale-control closure race, already closed/rejected window, pending-change preservation, bounded close timeout, tray input coalescing and video-page activation/readiness policy.
+No display settings or startup entries changed.
+
+
+--- material-render-test ---
+dpi=96 dark=False soft alpha edges=553 opaque strokes=405 PASS
+label premultiplied-alpha copy dpi=96 dark=False PASS
+dpi=144 dark=False soft alpha edges=796 opaque strokes=1347 PASS
+label premultiplied-alpha copy dpi=144 dark=False PASS
+dpi=192 dark=False soft alpha edges=1121 opaque strokes=2386 PASS
+label premultiplied-alpha copy dpi=192 dark=False PASS
+dpi=96 dark=True soft alpha edges=553 opaque strokes=405 PASS
+label premultiplied-alpha copy dpi=96 dark=True PASS
+dpi=144 dark=True soft alpha edges=796 opaque strokes=1347 PASS
+label premultiplied-alpha copy dpi=144 dark=True PASS
+dpi=192 dark=True soft alpha edges=1121 opaque strokes=2386 PASS
+label premultiplied-alpha copy dpi=192 dark=True PASS
+1000 alpha surface copies: GDI objects 15 -> 15 PASS
+PASS: Chinese/Latin antialiasing, opaque glyphs, alpha edges, translucent label surface; no system settings changed.
+
+
+--- layout-test ---
+\\.\DISPLAY1 iteration=0 dpi=168 client={Width=805, Height=1155} bounds={X=-3182,Y=-212,Width=805,Height=1155}
+\\.\DISPLAY2 iteration=0 dpi=96 client={Width=460, Height=708} bounds={X=-1890,Y=1788,Width=460,Height=708}
+\\.\DISPLAY5 iteration=0 dpi=144 client={Width=690, Height=997} bounds={X=30,Y=30,Width=690,Height=997}
+\\.\DISPLAY1 iteration=1 dpi=168 client={Width=805, Height=1157} bounds={X=-3182,Y=-212,Width=805,Height=1157}
+\\.\DISPLAY2 iteration=1 dpi=96 client={Width=460, Height=708} bounds={X=-1890,Y=1788,Width=460,Height=708}
+\\.\DISPLAY5 iteration=1 dpi=144 client={Width=690, Height=997} bounds={X=30,Y=30,Width=690,Height=997}
+\\.\DISPLAY1 iteration=2 dpi=168 client={Width=805, Height=1157} bounds={X=-3182,Y=-212,Width=805,Height=1157}
+\\.\DISPLAY2 iteration=2 dpi=96 client={Width=460, Height=708} bounds={X=-1890,Y=1788,Width=460,Height=708}
+\\.\DISPLAY5 iteration=2 dpi=144 client={Width=690, Height=997} bounds={X=30,Y=30,Width=690,Height=997}
+
+
+--- brightness-ui-test ---
+dpi=168 dark=False samples=120 selector paints=0 invalidations=0 bounds changes=0 selection changes=0 readout before={Width=191, Height=34} after={Width=191, Height=34}
+dpi=168 dark=True samples=120 selector paints=0 invalidations=0 bounds changes=0 selection changes=0 readout before={Width=191, Height=34} after={Width=191, Height=34}
+dpi=96 dark=False samples=120 selector paints=0 invalidations=0 bounds changes=0 selection changes=0 readout before={Width=129, Height=25} after={Width=129, Height=25}
+dpi=96 dark=True samples=120 selector paints=0 invalidations=0 bounds changes=0 selection changes=0 readout before={Width=129, Height=25} after={Width=129, Height=25}
+dpi=144 dark=False samples=120 selector paints=0 invalidations=0 bounds changes=0 selection changes=0 readout before={Width=178, Height=31} after={Width=178, Height=31}
+dpi=144 dark=True samples=120 selector paints=0 invalidations=0 bounds changes=0 selection changes=0 readout before={Width=178, Height=31} after={Width=178, Height=31}
+PASS: live readout, selector isolation, work-area notification, both themes and all monitor DPIs. No display settings changed.
+
+
+--- animation-ui-test ---
+\\.\DISPLAY1 dpi=168 dark=False glass=True interpolated frames=4 loading/failure/opening=PASS animation-frame selector paints=0 state-change/opening selector paints=10
+\\.\DISPLAY1 dpi=168 dark=True glass=True interpolated frames=5 loading/failure/opening=PASS animation-frame selector paints=0 state-change/opening selector paints=9
+\\.\DISPLAY2 dpi=96 dark=False glass=True interpolated frames=5 loading/failure/opening=PASS animation-frame selector paints=0 state-change/opening selector paints=9
+\\.\DISPLAY2 dpi=96 dark=True glass=True interpolated frames=5 loading/failure/opening=PASS animation-frame selector paints=0 state-change/opening selector paints=9
+\\.\DISPLAY5 dpi=144 dark=False glass=True interpolated frames=5 loading/failure/opening=PASS animation-frame selector paints=0 state-change/opening selector paints=9
+\\.\DISPLAY5 dpi=144 dark=True glass=True interpolated frames=5 loading/failure/opening=PASS animation-frame selector paints=0 state-change/opening selector paints=9
+PASS: spinner inside old thumb, delayed confirmed movement, duplicate click blocked, failure recovery, theme/DPI cycles, selector/window stability, opening copy, opaque accessibility fallback and no layered window. Preview fixtures only; no display or startup settings changed.
+
+
+--- popup-opening-test ---
+\\.\DISPLAY1 turn=0 repeat=0 dark=False dpi=168 first show={X=-838,Y=591,Width=805,Height=1146} final={X=-838,Y=591,Width=805,Height=1146} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=832
+\\.\DISPLAY1 turn=0 repeat=1 dark=False dpi=168 first show={X=-838,Y=591,Width=805,Height=1146} final={X=-838,Y=591,Width=805,Height=1146} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=368
+\\.\DISPLAY2 turn=0 repeat=0 dark=False dpi=96 first show={X=-472,Y=2333,Width=460,Height=613} final={X=-472,Y=2333,Width=460,Height=613} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=861
+\\.\DISPLAY2 turn=0 repeat=1 dark=False dpi=96 first show={X=-472,Y=2333,Width=460,Height=613} final={X=-472,Y=2333,Width=460,Height=613} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=349
+\\.\DISPLAY5 turn=0 repeat=0 dark=False dpi=144 first show={X=3132,Y=1118,Width=690,Height=952} final={X=3132,Y=1118,Width=690,Height=952} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=841
+\\.\DISPLAY5 turn=0 repeat=1 dark=False dpi=144 first show={X=3132,Y=1118,Width=690,Height=952} final={X=3132,Y=1118,Width=690,Height=952} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=451
+\\.\DISPLAY1 turn=1 repeat=0 dark=False dpi=168 first show={X=-838,Y=575,Width=805,Height=1162} final={X=-838,Y=575,Width=805,Height=1162} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=1061
+\\.\DISPLAY1 turn=1 repeat=1 dark=False dpi=168 first show={X=-838,Y=575,Width=805,Height=1162} final={X=-838,Y=575,Width=805,Height=1162} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=499
+\\.\DISPLAY2 turn=1 repeat=0 dark=False dpi=96 first show={X=-472,Y=2329,Width=460,Height=617} final={X=-472,Y=2329,Width=460,Height=617} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=1048
+\\.\DISPLAY2 turn=1 repeat=1 dark=False dpi=96 first show={X=-472,Y=2329,Width=460,Height=617} final={X=-472,Y=2329,Width=460,Height=617} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=333
+\\.\DISPLAY5 turn=1 repeat=0 dark=False dpi=144 first show={X=3132,Y=1114,Width=690,Height=956} final={X=3132,Y=1114,Width=690,Height=956} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=779
+\\.\DISPLAY5 turn=1 repeat=1 dark=False dpi=144 first show={X=3132,Y=1114,Width=690,Height=956} final={X=3132,Y=1114,Width=690,Height=956} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=414
+\\.\DISPLAY1 turn=2 repeat=0 dark=False dpi=168 first show={X=-838,Y=571,Width=805,Height=1166} final={X=-838,Y=571,Width=805,Height=1166} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=868
+\\.\DISPLAY1 turn=2 repeat=1 dark=False dpi=168 first show={X=-838,Y=571,Width=805,Height=1166} final={X=-838,Y=571,Width=805,Height=1166} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=404
+\\.\DISPLAY2 turn=2 repeat=0 dark=False dpi=96 first show={X=-472,Y=2329,Width=460,Height=617} final={X=-472,Y=2329,Width=460,Height=617} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=1005
+\\.\DISPLAY2 turn=2 repeat=1 dark=False dpi=96 first show={X=-472,Y=2329,Width=460,Height=617} final={X=-472,Y=2329,Width=460,Height=617} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=353
+\\.\DISPLAY5 turn=2 repeat=0 dark=False dpi=144 first show={X=3132,Y=1114,Width=690,Height=956} final={X=3132,Y=1114,Width=690,Height=956} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=923
+\\.\DISPLAY5 turn=2 repeat=1 dark=False dpi=144 first show={X=3132,Y=1114,Width=690,Height=956} final={X=3132,Y=1114,Width=690,Height=956} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=381
+\\.\DISPLAY1 turn=3 repeat=0 dark=True dpi=168 first show={X=-838,Y=571,Width=805,Height=1166} final={X=-838,Y=571,Width=805,Height=1166} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=916
+\\.\DISPLAY1 turn=3 repeat=1 dark=True dpi=168 first show={X=-838,Y=571,Width=805,Height=1166} final={X=-838,Y=571,Width=805,Height=1166} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=413
+\\.\DISPLAY2 turn=3 repeat=0 dark=True dpi=96 first show={X=-472,Y=2329,Width=460,Height=617} final={X=-472,Y=2329,Width=460,Height=617} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=892
+\\.\DISPLAY2 turn=3 repeat=1 dark=True dpi=96 first show={X=-472,Y=2329,Width=460,Height=617} final={X=-472,Y=2329,Width=460,Height=617} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=330
+\\.\DISPLAY5 turn=3 repeat=0 dark=True dpi=144 first show={X=3132,Y=1114,Width=690,Height=956} final={X=3132,Y=1114,Width=690,Height=956} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=905
+\\.\DISPLAY5 turn=3 repeat=1 dark=True dpi=144 first show={X=3132,Y=1114,Width=690,Height=956} final={X=3132,Y=1114,Width=690,Height=956} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=371
+\\.\DISPLAY1 turn=4 repeat=0 dark=True dpi=168 first show={X=-838,Y=571,Width=805,Height=1166} final={X=-838,Y=571,Width=805,Height=1166} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=973
+\\.\DISPLAY1 turn=4 repeat=1 dark=True dpi=168 first show={X=-838,Y=571,Width=805,Height=1166} final={X=-838,Y=571,Width=805,Height=1166} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=404
+\\.\DISPLAY2 turn=4 repeat=0 dark=True dpi=96 first show={X=-472,Y=2329,Width=460,Height=617} final={X=-472,Y=2329,Width=460,Height=617} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=908
+\\.\DISPLAY2 turn=4 repeat=1 dark=True dpi=96 first show={X=-472,Y=2329,Width=460,Height=617} final={X=-472,Y=2329,Width=460,Height=617} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=341
+\\.\DISPLAY5 turn=4 repeat=0 dark=True dpi=144 first show={X=3132,Y=1114,Width=690,Height=956} final={X=3132,Y=1114,Width=690,Height=956} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=934
+\\.\DISPLAY5 turn=4 repeat=1 dark=True dpi=144 first show={X=3132,Y=1114,Width=690,Height=956} final={X=3132,Y=1114,Width=690,Height=956} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=363
+\\.\DISPLAY1 turn=5 repeat=0 dark=True dpi=168 first show={X=-838,Y=571,Width=805,Height=1166} final={X=-838,Y=571,Width=805,Height=1166} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=997
+\\.\DISPLAY1 turn=5 repeat=1 dark=True dpi=168 first show={X=-838,Y=571,Width=805,Height=1166} final={X=-838,Y=571,Width=805,Height=1166} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=420
+\\.\DISPLAY2 turn=5 repeat=0 dark=True dpi=96 first show={X=-472,Y=2329,Width=460,Height=617} final={X=-472,Y=2329,Width=460,Height=617} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=1011
+\\.\DISPLAY2 turn=5 repeat=1 dark=True dpi=96 first show={X=-472,Y=2329,Width=460,Height=617} final={X=-472,Y=2329,Width=460,Height=617} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=362
+\\.\DISPLAY5 turn=5 repeat=0 dark=True dpi=144 first show={X=3132,Y=1114,Width=690,Height=956} final={X=3132,Y=1114,Width=690,Height=956} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=842
+\\.\DISPLAY5 turn=5 repeat=1 dark=True dpi=144 first show={X=3132,Y=1114,Width=690,Height=956} final={X=3132,Y=1114,Width=690,Height=956} visible geometry changes=0 delayed timer=False show cloak=1 prepared controls=7 exposed paints=0 popup ms=394
+PASS: complete first-frame painting while DWM-cloaked, reveal after paint, 36 cold/repeated popup cycles, both themes, three monitor DPIs, no visible geometry changes or delayed reflow, visible open. No display settings changed.
+
+
+--- tray-interaction-test ---
+PASS: single click opens, rapid repeated clicks do not undo opening/hiding, separate click hides immediately, stale DWM cloak repaired in one click, minimized window restored, unfocused visible window hides in one click, reopening reaches native foreground and stays in the normal Z-order band. No display settings changed.
+
+
+--- panel-lifecycle-test ---
+PASS: first tray click hides both ordinary and RTX-protected unfocused panels with no activation/jump, next click reopens, pinned native Z-order above another active window during and after RTX, no focus stealing or visibility/bounds/handle changes, explicit hide restores original normal/topmost layer, hidden operations stay unpinned, native close/hide and external SC_CLOSE guards, own HWND rejected, selection retained. No driver settings changed.
