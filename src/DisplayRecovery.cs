@@ -3,33 +3,36 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 
 namespace HdrCenter {
-// Event scheduling is independent of window visibility. Own mode-change notifications
-// are ignored during a transaction and its settling period, preventing a feedback loop.
+// Schedule recovery from connection identity and display wake events. HDR readiness
+// and generic mode changes also occur during ordinary HDR toggles, so neither is a reconnect.
 public sealed class DolbyGuard {
     public bool Enabled { get; private set; }
     public bool Running { get; private set; }
     public bool Pending { get; private set; }
     public string Key { get; private set; }
     public string Reason { get; private set; }
-    DateTime due, ignoreUntil;
+    DateTime due;
     string signature;
-    bool observed, wasReady, displayOff;
+    bool observed, displayOff, manualPending;
     int attempts, generation, runningGeneration;
     public void Configure(bool enabled,string key,DateTime now) {
         if(Enabled==enabled && Key==key)return;
-        Enabled=enabled; Key=key; generation++; Pending=false; observed=false; attempts=0;
+        Enabled=enabled; Key=key; generation++; Pending=false; manualPending=false; observed=false; attempts=0;
         if(enabled && !String.IsNullOrEmpty(key)) Request("启用守护 / 启动恢复",now,true);
     }
-    public void Request(string reason,DateTime now,bool physical) {
-        if(!Enabled || String.IsNullOrEmpty(Key))return;
-        if(Running || (!physical && now<ignoreUntil))return;
+    public void Request(string reason,DateTime now,bool physical,bool manual=false) {
+        if(!Enabled || String.IsNullOrEmpty(Key) || !physical)return;
+        if(Running || (Pending && manualPending && !manual))return;
         if(!Pending)attempts=0;
-        Reason=reason; Pending=true; due=now.AddSeconds(2);
+        Reason=reason; Pending=true; manualPending=manual; due=now.AddSeconds(2);
     }
-    public void Observe(string current,bool ready,DateTime now) {
-        bool changed=observed && (signature!=current || (!wasReady && ready));
-        signature=current; wasReady=ready; observed=true;
-        if(changed && current!=null)Request("显示器重新连接 / HDR 恢复",now,true);
+    public void Observe(string current,bool ready,DateTime now,bool? hdrEnabled=null) {
+        bool changed=observed && signature!=current;
+        signature=current; observed=true;
+        if(changed && current!=null)Request("显示器重新连接",now,true);
+        // Do not defer automatic work from HDR OFF until the next HDR ON.
+        // An explicit repair remains queued; an unavailable screen is not known OFF.
+        if(hdrEnabled==false && Pending && !manualPending) { Pending=false; attempts=0; }
         // While absent, retain the pending request; never act on a different screen.
     }
     public void Power(int state,DateTime now) {
@@ -41,9 +44,10 @@ public sealed class DolbyGuard {
         Running=true; Pending=false; attempts++; runningGeneration=generation; return true;
     }
     public void Finish(bool success,DateTime now) {
-        Running=false; ignoreUntil=now.AddSeconds(8);
+        Running=false;
         if(runningGeneration!=generation) { if(Enabled)Request("显示器选择已更新",now,true); return; }
         if(!success && Enabled && attempts<3) { Pending=true; due=now.AddSeconds(5*attempts); }
+        else manualPending=false;
     }
     public void Defer(DateTime now) { if(Pending)due=now.AddSeconds(2); }
 }

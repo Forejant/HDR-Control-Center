@@ -2,13 +2,13 @@
 
 Windows 系统托盘工具，用于快捷控制显示器 HDR、SDR 内容亮度、杜比视界和 NVIDIA RTX 视频增强。
 
-[下载 beta1.0](https://github.com/Forejant/HDR-Control-Center/releases/tag/beta1.0)
+[下载 beta1.0.1](https://github.com/Forejant/HDR-Control-Center/releases/tag/beta1.0.1)
 
 ## 功能
 
 - 选择显示器，并记住上次选择。
 - 切换 Windows HDR，滑动实时调节 SDR 内容亮度。
-- 切换杜比视界；可启用“始终关闭杜比视界”，在显示器重新连接或点亮后执行开启再关闭的恢复操作。
+- 切换杜比视界；可启用“始终关闭杜比视界”，在显示器重新连接或点亮后执行开启再关闭的恢复操作。普通 HDR 关闭再开启不会触发该恢复操作。
 - 快捷控制 NVIDIA RTX Super Resolution 和视频 HDR，显示可读取的开关及活动状态。
 - 登录 Windows 时启动，常驻系统托盘，单击图标打开或收起控制中心。
 - 点击其他窗口自动收起，后台操作继续完成。
@@ -16,7 +16,7 @@ Windows 系统托盘工具，用于快捷控制显示器 HDR、SDR 内容亮度�
 
 ## 使用
 
-1. 下载发布页中的 `HdrControlCenter-beta1.0.zip`。
+1. 下载发布页中的 `HdrControlCenter-beta1.0.1.zip`。
 2. 解压到固定目录，运行 `HdrControlCenter.exe`。
 3. 选择显示器后使用相应控制项。
 4. 需要开机启动时，勾选“登录 Windows 时启动”。
@@ -47,4 +47,4 @@ Windows 系统托盘工具，用于快捷控制显示器 HDR、SDR 内容亮度�
 
 显示器选择和软件设置保存在 `%LOCALAPPDATA%\HdrControlCenter`，升级时继续沿用。
 
-测试版的兼容性取决于设备、系统和驱动。反馈问题时请提供 Windows 版本、显卡/驱动版本、显示器型号和复现步骤。本次发布重新编译并打包，未进行新的运行测试。
+测试版的兼容性取决于设备、系统和驱动。反馈问题时请提供 Windows 版本、显卡/驱动版本、显示器型号和复现步骤。

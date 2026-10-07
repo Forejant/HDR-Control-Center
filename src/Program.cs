@@ -109,6 +109,9 @@ public sealed partial class Center : Form {
         Row("HDR",hdr,hdrButton); hdrButton.Click+=delegate {
             var m=Selected; if(m==null)return;
             if(preview) { PreviewToggle(hdrButton,()=>m.Enabled=!m.Enabled); return; }
+            // Clear any startup repair while the selected screen is still HDR OFF,
+            // even if the first background observation has not happened yet.
+            if(!m.Enabled)ObserveRecovery(m);
             MonitorInfo confirmed=null;
             Act(()=> { confirmed=DisplayService.Hdr(m.Key,!m.Enabled); return "HDR 设置已更新"; },feedback:hdrButton,confirmed:()=> {
                 if(Selected!=null && Selected.Key==confirmed.Key)Selected.UpdateState(confirmed);
@@ -597,22 +600,30 @@ public sealed partial class Center : Form {
         if(preview) { PreviewToggle(dolbyButton,()=>snapshot.Dolby.Enabled=snapshot.Dolby.Enabled!=true); return; }
         if(Selected==null)return; string key=Selected.Key;
         bool force=prefs.AlwaysDisableDolby;
-        if(force) { guard.Request("手动修复关闭",DateTime.UtcNow,true); guardStatus.Text="已安排开启→关闭修复。"; return; }
+        if(force) { guard.Request("手动修复关闭",DateTime.UtcNow,true,true); guardStatus.Text="已安排开启→关闭修复。"; return; }
         Feature confirmed=null;
         Act(()=> { confirmed=PanelBridge.DolbyTransaction(key); lock(lastDolby)lastDolby[key]=confirmed; return "杜比视界已"+(confirmed.Enabled==true?"开启":"关闭"); },feedback:dolbyButton,confirmed:()=> { if(snapshot!=null && Selected!=null && Selected.Key==key)snapshot.Dolby=confirmed; });
     }
     void PreviewToggle(ModernButton button,Action update) { Act(()=> { Thread.Sleep(1100); update(); return "预览切换完成；未修改系统设置。"; },feedback:button); }
+    void ObserveRecovery(MonitorInfo m) {
+        string signature=m==null?null:m.Key+"|"+m.Adapter.High+":"+m.Adapter.Low+":"+m.Target;
+        bool ready=m!=null && m.Active && m.Error==null;
+        bool? hdrEnabled=m!=null && m.Error==null?(bool?)m.Enabled:null;
+        bool wasPending=guard.Pending;
+        guard.Observe(signature,ready,DateTime.UtcNow,hdrEnabled);
+        if(wasPending && !guard.Pending && !guard.Running)guardStatus.Text="守护已启用；等待重新连接 / 点亮。";
+    }
     async void PollRecovery() {
-        if(preview || IsDisposed || exiting || guardPolling || !prefs.AlwaysDisableDolby)return;
+        if(preview || IsDisposed || exiting || guardPolling || !prefs.AlwaysDisableDolby || (busy && operationButton==hdrButton))return;
         guardPolling=true;
         try {
             string key=prefs.MonitorKey;
             var monitors=await Worker.Run(()=>DisplayService.List());
             if(IsDisposed || exiting || key!=prefs.MonitorKey || !prefs.AlwaysDisableDolby)return;
             var m=monitors.FirstOrDefault(x=>x.Key==key);
-            string signature=m==null?null:m.Key+"|"+m.Adapter.High+":"+m.Adapter.Low+":"+m.Target;
             bool ready=m!=null && m.Active && m.Error==null;
-            guard.Observe(signature,ready,DateTime.UtcNow);
+            if(busy && operationButton==hdrButton)return;
+            ObserveRecovery(m);
             if(busy || refreshing || brightnessWriting || pendingBrightness.HasValue || slider.IsDragging)return;
             if(!guard.TryStart(ready,DateTime.UtcNow))return;
             RecoveryLog("开始："+guard.Reason);
@@ -681,7 +692,7 @@ public sealed partial class Center : Form {
                 }
             }
         }
-        if(m.Msg==0x007e) { version++; snapshot=null; QueueGeometry(); guard.Request("显示模式 / 连接变化",DateTime.UtcNow,false); if(Visible)RefreshState(false); }
+        if(m.Msg==0x007e) { version++; snapshot=null; QueueGeometry(); PollRecovery(); if(Visible)RefreshState(false); }
         else if(m.Msg==0x001a && m.WParam.ToInt64()==0x002f)QueueGeometry(); // SPI_SETWORKAREA
         else if(m.Msg==0x0218) {
             int kind=m.WParam.ToInt32();
